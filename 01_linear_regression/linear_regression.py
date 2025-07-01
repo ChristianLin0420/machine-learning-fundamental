@@ -12,6 +12,7 @@ Implements multivariate linear regression using:
 
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -403,6 +404,293 @@ def compare_with_sklearn(X_train, X_test, y_train, y_test):
     }
 
 
+def plot_loss_surface_3d(X, y, model=None, save_path=None, feature_name="Feature"):
+    """
+    Plot 3D loss surface for linear regression
+    
+    Args:
+        X: Feature matrix (preferably 1D for clear visualization)
+        y: Target values
+        model: Trained model (optional, to mark optimal point)
+        save_path: Path to save the plot
+        feature_name: Name of the feature for labeling
+    """
+    # Use only first feature if multivariate
+    if X.shape[1] > 1:
+        X = X[:, 0:1]
+        print(f"Using only first feature ({feature_name}) for loss surface visualization")
+    
+    X_flat = X.flatten()
+    
+    # Fit a simple model to get optimal parameters if not provided
+    if model is None:
+        simple_model = LinearRegressionScratch()
+        simple_model.fit_normal_equation(X, y)
+        optimal_weight = simple_model.weights[0]
+        optimal_bias = simple_model.bias
+    else:
+        if hasattr(model, 'weights') and len(model.weights) > 0:
+            optimal_weight = model.weights[0]
+            optimal_bias = model.bias
+        else:
+            # Fit simple model
+            simple_model = LinearRegressionScratch()
+            simple_model.fit_normal_equation(X, y)
+            optimal_weight = simple_model.weights[0]
+            optimal_bias = simple_model.bias
+    
+    # Create parameter grids around optimal values
+    weight_range = 2.0  # Range around optimal weight
+    bias_range = 2.0    # Range around optimal bias
+    
+    weights = np.linspace(optimal_weight - weight_range, 
+                         optimal_weight + weight_range, 50)
+    biases = np.linspace(optimal_bias - bias_range, 
+                        optimal_bias + bias_range, 50)
+    
+    W, B = np.meshgrid(weights, biases)
+    Loss = np.zeros_like(W)
+    
+    # Compute loss for each parameter combination
+    for i in range(len(weights)):
+        for j in range(len(biases)):
+            predictions = X_flat * weights[i] + biases[j]
+            Loss[j, i] = np.mean((y - predictions) ** 2)
+    
+    # Create 3D plot
+    fig = plt.figure(figsize=(12, 9))
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Plot surface
+    surface = ax.plot_surface(W, B, Loss, 
+                             cmap='viridis', 
+                             alpha=0.8,
+                             edgecolor='none')
+    
+    # Mark optimal point
+    optimal_loss = np.mean((y - (X_flat * optimal_weight + optimal_bias)) ** 2)
+    ax.scatter([optimal_weight], [optimal_bias], [optimal_loss], 
+              color='red', s=100, label=f'Optimal Point\nWeight: {optimal_weight:.2f}\nBias: {optimal_bias:.2f}\nLoss: {optimal_loss:.2f}')
+    
+    # Add contour lines at the bottom
+    contours = ax.contour(W, B, Loss, zdir='z', offset=Loss.min(), cmap='viridis', alpha=0.5)
+    
+    # Labels and title
+    ax.set_xlabel('Weight', fontsize=12)
+    ax.set_ylabel('Bias', fontsize=12)
+    ax.set_zlabel('Loss (MSE)', fontsize=12)
+    ax.set_title(f'Loss Surface for Linear Regression\n({feature_name})', fontsize=14)
+    
+    # Add colorbar
+    plt.colorbar(surface, ax=ax, shrink=0.6)
+    
+    # Add legend
+    ax.legend(loc='upper left')
+    
+    # Improve viewing angle
+    ax.view_init(elev=20, azim=45)
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    return optimal_weight, optimal_bias, optimal_loss
+
+
+def plot_loss_contour_2d(X, y, model=None, save_path=None, feature_name="Feature"):
+    """
+    Plot 2D contour plot of loss surface
+    
+    Args:
+        X: Feature matrix (preferably 1D for clear visualization)
+        y: Target values
+        model: Trained model (optional, to mark optimal point)
+        save_path: Path to save the plot
+        feature_name: Name of the feature for labeling
+    """
+    # Use only first feature if multivariate
+    if X.shape[1] > 1:
+        X = X[:, 0:1]
+    
+    X_flat = X.flatten()
+    
+    # Get optimal parameters
+    if model is None or not hasattr(model, 'weights') or len(model.weights) == 0:
+        simple_model = LinearRegressionScratch()
+        simple_model.fit_normal_equation(X, y)
+        optimal_weight = simple_model.weights[0]
+        optimal_bias = simple_model.bias
+    else:
+        optimal_weight = model.weights[0]
+        optimal_bias = model.bias
+    
+    # Create parameter grids
+    weight_range = 2.0
+    bias_range = 2.0
+    
+    weights = np.linspace(optimal_weight - weight_range, 
+                         optimal_weight + weight_range, 100)
+    biases = np.linspace(optimal_bias - bias_range, 
+                        optimal_bias + bias_range, 100)
+    
+    W, B = np.meshgrid(weights, biases)
+    Loss = np.zeros_like(W)
+    
+    # Compute loss for each parameter combination
+    for i in range(len(weights)):
+        for j in range(len(biases)):
+            predictions = X_flat * weights[i] + biases[j]
+            Loss[j, i] = np.mean((y - predictions) ** 2)
+    
+    # Create 2D contour plot
+    plt.figure(figsize=(10, 8))
+    
+    # Plot contours
+    contour_levels = 20
+    contours = plt.contour(W, B, Loss, levels=contour_levels, colors='blue', alpha=0.6)
+    plt.contourf(W, B, Loss, levels=contour_levels, cmap='viridis', alpha=0.8)
+    
+    # Mark optimal point
+    optimal_loss = np.mean((y - (X_flat * optimal_weight + optimal_bias)) ** 2)
+    plt.plot(optimal_weight, optimal_bias, 'r*', markersize=15, 
+             label=f'Optimal Point\nWeight: {optimal_weight:.2f}, Bias: {optimal_bias:.2f}\nLoss: {optimal_loss:.2f}')
+    
+    # Add colorbar
+    cbar = plt.colorbar()
+    cbar.set_label('Loss (MSE)', fontsize=12)
+    
+    # Labels and title
+    plt.xlabel('Weight', fontsize=12)
+    plt.ylabel('Bias', fontsize=12)
+    plt.title(f'Loss Surface Contour Plot\n({feature_name})', fontsize=14)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+def demonstrate_gradient_descent_path(X, y, save_path=None, feature_name="Feature"):
+    """
+    Show gradient descent optimization path on loss surface
+    
+    Args:
+        X: Feature matrix (preferably 1D)
+        y: Target values
+        save_path: Path to save the plot
+        feature_name: Name of the feature for labeling
+    """
+    # Use only first feature if multivariate
+    if X.shape[1] > 1:
+        X = X[:, 0:1]
+    
+    X_flat = X.flatten()
+    
+    # Train model with gradient descent and capture history
+    model = LinearRegressionScratch(learning_rate=0.1, max_iterations=50)
+    
+    # Modified gradient descent to capture parameter history
+    n_samples, n_features = X.shape
+    weight_history = []
+    bias_history = []
+    loss_history = []
+    
+    # Initialize parameters
+    weight = np.random.normal(0, 0.01)
+    bias = 0
+    
+    for i in range(50):
+        # Forward pass
+        predictions = X_flat * weight + bias
+        
+        # Compute cost
+        loss = np.mean((y - predictions) ** 2)
+        loss_history.append(loss)
+        weight_history.append(weight)
+        bias_history.append(bias)
+        
+        # Compute gradients
+        error = predictions - y
+        dw = (1/n_samples) * np.sum(X_flat * error)
+        db = (1/n_samples) * np.sum(error)
+        
+        # Update parameters
+        weight -= 0.1 * dw
+        bias -= 0.1 * db
+        
+        # Check convergence
+        if i > 0 and abs(loss_history[-2] - loss_history[-1]) < 1e-6:
+            break
+    
+    # Create contour plot with gradient descent path
+    optimal_weight = weight
+    optimal_bias = bias
+    
+    weight_range = max(2.0, abs(weight_history[0] - optimal_weight) * 1.5)
+    bias_range = max(2.0, abs(bias_history[0] - optimal_bias) * 1.5)
+    
+    weights = np.linspace(optimal_weight - weight_range, 
+                         optimal_weight + weight_range, 100)
+    biases = np.linspace(optimal_bias - bias_range, 
+                        optimal_bias + bias_range, 100)
+    
+    W, B = np.meshgrid(weights, biases)
+    Loss = np.zeros_like(W)
+    
+    for i in range(len(weights)):
+        for j in range(len(biases)):
+            predictions = X_flat * weights[i] + biases[j]
+            Loss[j, i] = np.mean((y - predictions) ** 2)
+    
+    # Plot
+    plt.figure(figsize=(12, 8))
+    
+    # Contour plot
+    contours = plt.contour(W, B, Loss, levels=20, colors='gray', alpha=0.6)
+    plt.contourf(W, B, Loss, levels=20, cmap='viridis', alpha=0.8)
+    
+    # Gradient descent path
+    plt.plot(weight_history, bias_history, 'r-o', linewidth=2, markersize=4, 
+             label='Gradient Descent Path', alpha=0.8)
+    
+    # Mark start and end points
+    plt.plot(weight_history[0], bias_history[0], 'go', markersize=10, 
+             label=f'Start Point\nLoss: {loss_history[0]:.2f}')
+    plt.plot(weight_history[-1], bias_history[-1], 'r*', markersize=15, 
+             label=f'Final Point\nLoss: {loss_history[-1]:.2f}')
+    
+    # Add arrows to show direction
+    for i in range(0, len(weight_history)-1, max(1, len(weight_history)//10)):
+        dx = weight_history[i+1] - weight_history[i]
+        dy = bias_history[i+1] - bias_history[i]
+        plt.arrow(weight_history[i], bias_history[i], dx*0.8, dy*0.8,
+                 head_width=weight_range*0.02, head_length=bias_range*0.02, 
+                 fc='red', ec='red', alpha=0.7)
+    
+    # Colorbar and labels
+    cbar = plt.colorbar()
+    cbar.set_label('Loss (MSE)', fontsize=12)
+    
+    plt.xlabel('Weight', fontsize=12)
+    plt.ylabel('Bias', fontsize=12)
+    plt.title(f'Gradient Descent Optimization Path\n({feature_name})', fontsize=14)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.show()
+    
+    return weight_history, bias_history, loss_history
+
+
 def main():
     """
     Main function to demonstrate linear regression implementation
@@ -490,9 +778,46 @@ def main():
     print(f"   Polynomial Ridge - Training MSE: {ridge_train_mse:.4f}, R²: {ridge_train_r2:.4f}")
     print(f"   Polynomial Ridge - Testing MSE:  {ridge_test_mse:.4f}, R²: {ridge_test_r2:.4f}")
     
+    # NEW: Loss Surface Visualizations
+    print("\n6. Loss Surface Visualizations...")
+    print("   (Using median income feature for clear visualization)")
+    
+    # 3D Loss Surface
+    print("   - 3D Loss Surface")
+    plot_loss_surface_3d(
+        X_train_2d, y_train,
+        save_path='plots/loss_surface_3d.png',
+        feature_name='Median Income'
+    )
+    
+    # 2D Contour Plot
+    print("   - 2D Loss Surface Contour")
+    plot_loss_contour_2d(
+        X_train_2d, y_train,
+        save_path='plots/loss_surface_contour.png',
+        feature_name='Median Income'
+    )
+    
+    # Gradient Descent Path
+    print("   - Gradient Descent Optimization Path")
+    weight_hist, bias_hist, loss_hist = demonstrate_gradient_descent_path(
+        X_train_2d, y_train,
+        save_path='plots/gradient_descent_path.png',
+        feature_name='Median Income'
+    )
+    
+    print(f"     Gradient descent converged in {len(loss_hist)} iterations")
+    print(f"     Final loss: {loss_hist[-1]:.4f}")
+    
     print("\n" + "=" * 60)
-    print("CHALLENGE COMPLETED! 🎉")
-    print("Check the 'plots/' directory for visualizations")
+    print("CHALLENGE COMPLETED WITH LOSS SURFACE ANALYSIS! 🎉")
+    print("Check the 'plots/' directory for all visualizations:")
+    print("  - regression_line.png")
+    print("  - residuals.png") 
+    print("  - learning_curve.png")
+    print("  - loss_surface_3d.png")
+    print("  - loss_surface_contour.png")
+    print("  - gradient_descent_path.png")
     print("=" * 60)
 
 
