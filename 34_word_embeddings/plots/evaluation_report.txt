@@ -1,0 +1,80 @@
+Word Embedding Evaluation Report
+==================================================
+
+ANALOGY EVALUATION
+--------------------
+
+Model: Skip-gram
+  Accuracy: 1.000 (10/10)
+  Coverage: 1.000 (10/10)
+  Failed retrievals: 0
+  Category accuracies:
+    semantic_gender: 1.000
+    semantic_size: 1.000
+    other: 1.000
+
+Model: CBOW
+  Accuracy: 1.000 (10/10)
+  Coverage: 1.000 (10/10)
+  Failed retrievals: 0
+  Category accuracies:
+    semantic_gender: 1.000
+    semantic_size: 1.000
+    other: 1.000
+
+Model: GloVe
+  Accuracy: 0.600 (6/10)
+  Coverage: 1.000 (10/10)
+  Failed retrievals: 0
+  Category accuracies:
+    semantic_gender: 1.000
+    semantic_size: 0.000
+    other: 0.750
+
+WORD SIMILARITY EVALUATION
+-------------------------
+
+Model: Skip-gram
+  Spearman correlation: 0.319
+  Pearson correlation: 0.789
+  Coverage: 1.000
+
+Model: CBOW
+  Spearman correlation: 0.460
+  Pearson correlation: 0.823
+  Coverage: 1.000
+
+Model: GloVe
+  Spearman correlation: -0.018
+  Pearson correlation: 0.605
+  Coverage: 1.000
+
+SEMANTIC COHERENCE EVALUATION
+------------------------------
+
+Model: Skip-gram
+  Overall coherence: 0.684
+  Category coherence:
+    royalty: 0.787
+    gender: 0.956
+    animals: 0.382
+    sizes: 0.737
+    nature: 0.558
+
+Model: CBOW
+  Overall coherence: 0.901
+  Category coherence:
+    royalty: 0.960
+    gender: 0.955
+    animals: 0.746
+    sizes: 0.934
+    nature: 0.911
+
+Model: GloVe
+  Overall coherence: 0.647
+  Category coherence:
+    royalty: 0.683
+    gender: 0.836
+    animals: 0.409
+    sizes: 0.672
+    nature: 0.637
