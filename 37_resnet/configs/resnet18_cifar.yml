@@ -1,0 +1,38 @@
+# ResNet-18 Configuration for CIFAR-10
+# Optimized for achieving >93% accuracy
+
+# Model architecture
+arch: resnet18
+pre_activation: true  # Use pre-activation for better optimization
+
+# Training parameters
+epochs: 200
+batch_size: 128
+lr: 0.1
+weight_decay: 0.0005
+momentum: 0.9
+
+# Learning rate scheduling
+scheduler: warmup_cosine
+warmup_epochs: 5
+min_lr: 0.0001
+
+# Regularization
+mixup_alpha: 0.2
+mixup_prob: 1.0
+cutmix: true
+label_smoothing: 0.1
+grad_clip: 0.0  # No gradient clipping needed for ResNet-18
+
+# Data augmentation
+randaugment: true
+
+# Hardware
+num_workers: 4
+print_freq: 50
+save_freq: 25
+
+# Expected results:
+# - Best validation accuracy: >93%
+# - Training time: ~2-3 hours on GPU
+# - Parameters: ~11M

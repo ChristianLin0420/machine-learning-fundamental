@@ -1,0 +1,38 @@
+# ResNet-18 Baseline Configuration for CIFAR-10
+# Basic training without modern tricks for comparison
+
+# Model architecture
+arch: resnet18
+pre_activation: false  # Original post-activation ResNet
+
+# Training parameters
+epochs: 200
+batch_size: 128
+lr: 0.1
+weight_decay: 0.0001  # Lower weight decay
+momentum: 0.9
+
+# Learning rate scheduling
+scheduler: step  # Simple step decay
+warmup_epochs: 0
+min_lr: 0
+
+# Regularization (minimal)
+mixup_alpha: 0.0  # No mixup
+mixup_prob: 0.0
+cutmix: false
+label_smoothing: 0.0  # No label smoothing
+grad_clip: 0.0
+
+# Data augmentation (basic)
+randaugment: false  # Basic augmentation only
+
+# Hardware
+num_workers: 4
+print_freq: 50
+save_freq: 50
+
+# Expected results:
+# - Best validation accuracy: ~89-91%
+# - Training time: ~2-3 hours on GPU
+# - Demonstrates improvement from modern techniques
