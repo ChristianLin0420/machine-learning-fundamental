@@ -66,3 +66,4 @@ class Encoder(nn.Module):
         return mean
 
 
+

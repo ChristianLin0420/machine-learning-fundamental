@@ -133,3 +133,4 @@ class Critic(nn.Module):
         return self.critic(latent)
 
 
+
